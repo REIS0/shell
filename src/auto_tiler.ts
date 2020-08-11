@@ -48,26 +48,31 @@ export class AutoTiler {
 
         if (!a_fork || !b_fork) return;
 
-        function stack_detach(ext: Ext, win: ShellWindow): null | number {
-            const win_stack = win.stack;
-            if (win.stack !== null) ext.auto_tiler
-                ?.forest.stacks.get(win.stack)
-                ?.deactivate(win);
-            return win_stack;
+        const a_stack = a_win.stack, b_stack = b_win.stack;
+
+        if (ext.auto_tiler) {
+            if (a_win.stack !== null) ext.auto_tiler.forest.stacks.get(a_win.stack)?.deactivate(a_win);
+            if (b_win.stack !== null) ext.auto_tiler.forest.stacks.get(b_win.stack)?.deactivate(b_win);
         }
 
-        const a_stack = stack_detach(ext, a_win);
-        const b_stack = stack_detach(ext, b_win);
-
-        a_fork.replace_window(ext, a_win, b_win);
+        const a_fn = a_fork.replace_window(ext, a_win, b_win);
         this.attached.insert(b, a_ent);
-        a_win.stack = b_stack;
         this.tile(ext, a_fork, a_fork.area);
 
-        b_fork.replace_window(ext, b_win, a_win);
+        const b_fn = b_fork.replace_window(ext, b_win, a_win);
         this.attached.insert(a, b_ent);
-        b_win.stack = a_stack;
         this.tile(ext, b_fork, b_fork.area);
+
+        if (a_fn) a_fn();
+        if (b_fn) b_fn();
+
+        a_win.stack = b_stack;
+        b_win.stack = a_stack;
+
+        log.debug(`swapped: ${ext.auto_tiler?.forest.fmt(ext)}`);
+
+        ext.auto_tiler?.tile(ext, a_fork, a_fork.area);
+        ext.auto_tiler?.tile(ext, b_fork, b_fork.area);
     }
 
     update_toplevel(ext: Ext, fork: Fork, monitor: number, smart_gaps: boolean) {

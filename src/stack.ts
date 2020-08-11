@@ -237,7 +237,8 @@ export class Stack {
         const c = this.components[idx];
         if (c) {
             for (const s of c.signals) c.meta.disconnect(s);
-            c.meta.get_compositor_private()?.show();
+
+            const actor = window.meta.get_compositor_private();
 
             if (this.active_meta === c.meta) {
                 if (this.active_signal) this.active_meta.disconnect(this.active_signal);
@@ -246,9 +247,9 @@ export class Stack {
                     this.update_positions(window.meta.get_frame_rect());
                 });
                 this.active = window.entity;
-                window.meta.get_compositor_private()?.show();
+                actor?.show();
             } else {
-                window.meta.get_compositor_private()?.hide();
+                actor?.hide();
             }
 
             c.meta = window.meta;

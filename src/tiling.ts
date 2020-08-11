@@ -606,28 +606,34 @@ export class Tiler {
         if (this.window) {
             const meta = ext.windows.get(this.window);
             if (meta) {
-                ext.size_signals_block(meta);
+                let tree_swapped = false;
 
                 if (this.swap_window) {
                     const meta_swap = ext.windows.get(this.swap_window);
                     if (meta_swap) {
                         if (ext.auto_tiler) {
+                            tree_swapped = true;
                             ext.auto_tiler.attach_swap(ext, this.swap_window, this.window);
+                        } else {
+                            ext.size_signals_block(meta_swap);
+
+                            meta_swap.move(ext, meta.rect(), () => {
+                                ext.size_signals_unblock(meta_swap);
+                            });
                         }
-
-                        ext.size_signals_block(meta_swap);
-
-                        meta_swap.move(ext, meta.rect(), () => {
-                            ext.size_signals_unblock(meta_swap);
-                        });
                     }
                 }
 
-                const meta_entity = this.window;
-                meta.move(ext, ext.overlay, () => {
-                    ext.size_signals_unblock(meta);
-                    ext.add_tag(meta_entity, Tags.Tiled);
-                });
+                if (!tree_swapped) {
+                    ext.size_signals_block(meta);
+                    const meta_entity = this.window;
+                    meta.move(ext, ext.overlay, () => {
+                        ext.size_signals_unblock(meta);
+                        ext.add_tag(meta_entity, Tags.Tiled);
+                    });
+                }
+
+                ext.active_hint?.track_window(ext, meta, false);
             }
         }
 

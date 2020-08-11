@@ -175,6 +175,7 @@ export class ShellWindow {
                 ext.tween_signals.delete(entity_string);
                 if (ext.active_hint?.is_tracking(this.entity)) {
                     ext.active_hint.track_window(ext, this);
+                    ext.active_hint.show();
                 }
             };
 

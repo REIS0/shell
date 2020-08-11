@@ -118,39 +118,61 @@ export class Fork {
     }
 
     /** Replaces the association of a window in a fork with another */
-    replace_window(ext: Ext, a: ShellWindow, b: ShellWindow): boolean {
-        if (!this.right) return false;
+    replace_window(ext: Ext, a: ShellWindow, b: ShellWindow): null | (() => void) {
+        let closure = null;
+
+        let check_right = () => {
+            if (this.right) {
+                const inner = this.right.inner;
+                if (inner.kind === 2) {
+                    closure = () => {
+                        inner.entity = b.entity;
+                    };
+                } else if (inner.kind === 3) {
+                    const idx = node.stack_find(inner, a.entity);
+                    if (idx === null) {
+                        closure = null;
+                        return;
+                    }
+
+                    closure = () => {
+                        node.stack_replace(ext, inner, idx, b);
+                        inner.entities[idx] = b.entity;
+                    };
+                }
+            }
+        }
 
         switch (this.left.inner.kind) {
+            case 1:
+                check_right();
+                break;
             case 2:
-                if (Ecs.entity_eq(this.left.inner.entity, a.entity)) {
-                    this.left.inner.entity = b.entity;
-                } else if (this.right.inner.kind === 2) {
-                    this.right.inner.entity = b.entity;
-                } else if (this.right.inner.kind === 3) {
-                    const idx = node.stack_find(this.right.inner, a.entity);
-                    if (idx === null) return false;
-                    node.stack_replace(ext, this.right.inner, idx, b.entity);
-                    this.right.inner.entities[idx] = b.entity;
+                const inner = this.left.inner;
+                if (Ecs.entity_eq(inner.entity, a.entity)) {
+                    closure = () => {
+                        inner.entity = b.entity;
+                    }
+                } else {
+                    check_right();
                 }
 
                 break
             case 3:
-                let idx = node.stack_find(this.left.inner, a.entity);
+                const inner_s = this.left.inner as node.NodeStack;
+                let idx = node.stack_find(inner_s, a.entity);
                 if (idx !== null) {
-                    node.stack_replace(ext, this.left.inner, idx, b.entity);
-                    this.left.inner.entities[idx] = b.entity;
-                } else if (this.right.inner.kind === 2) {
-                    this.right.inner.entity = b.entity;
-                } else if (this.right.inner.kind === 3) {
-                    const idx = node.stack_find(this.right.inner, a.entity);
-                    if (idx === null) return false;
-                    node.stack_replace(ext, this.right.inner, idx, b.entity);
-                    this.right.inner.entities[idx] = b.entity;
+                    const id = idx;
+                    closure = () => {
+                        node.stack_replace(ext, inner_s, id, b);
+                        inner_s.entities[id] = b.entity;
+                    }
+                } else {
+                    check_right();
                 }
         }
 
-        return true;
+        return closure;
     }
 
     /** Sets a new area for this fork */

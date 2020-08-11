@@ -8,6 +8,7 @@ import type { Entity } from 'ecs';
 import type { Ext } from 'extension';
 import type { Rectangle } from 'rectangle';
 import type { Stack } from 'stack';
+import { ShellWindow } from './window';
 
 /** A node is either a fork a window */
 export enum NodeKind {
@@ -116,14 +117,13 @@ export function stack_move_right(ext: Ext, forest: Forest, node: NodeStack, enti
     return moved;
 }
 
-export function stack_replace(ext: Ext, node: NodeStack, from: number, window: Entity) {
+export function stack_replace(ext: Ext, node: NodeStack, from: number, window: ShellWindow) {
     if (!ext.auto_tiler) return;
 
     const stack = ext.auto_tiler.forest.stacks.get(node.idx);
     if (!stack) return;
 
-    const win = ext.windows.get(window);
-    if (win) stack.replace(from, win)
+    stack.replace(from, window)
 }
 
 /** Removes a window from a stack */
