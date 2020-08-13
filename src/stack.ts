@@ -166,7 +166,6 @@ export class Stack {
     deactivate(w: ShellWindow) {
         for (const c of this.components) if (Ecs.entity_eq(c.entity, w.entity)) {
             for (const s of c.signals) c.meta.disconnect(s);
-            c.meta.get_compositor_private()?.show();
             c.signals = [];
         }
 
@@ -240,8 +239,8 @@ export class Stack {
 
             const actor = window.meta.get_compositor_private();
 
-            if (this.active_meta === c.meta) {
-                if (this.active_signal) this.active_meta.disconnect(this.active_signal);
+            if (Ecs.entity_eq(window.entity, this.active)) {
+                if (this.active_signal) window.meta.disconnect(this.active_signal);
                 this.active_meta = window.meta;
                 this.active_signal = window.meta.connect('size-changed', () => {
                     this.update_positions(window.meta.get_frame_rect());

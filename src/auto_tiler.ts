@@ -57,11 +57,9 @@ export class AutoTiler {
 
         const a_fn = a_fork.replace_window(ext, a_win, b_win);
         this.attached.insert(b, a_ent);
-        this.tile(ext, a_fork, a_fork.area);
 
         const b_fn = b_fork.replace_window(ext, b_win, a_win);
         this.attached.insert(a, b_ent);
-        this.tile(ext, b_fork, b_fork.area);
 
         if (a_fn) a_fn();
         if (b_fn) b_fn();
@@ -69,10 +67,13 @@ export class AutoTiler {
         a_win.stack = b_stack;
         b_win.stack = a_stack;
 
-        log.debug(`swapped: ${ext.auto_tiler?.forest.fmt(ext)}`);
+        a_win.meta.get_compositor_private()?.show();
+        b_win.meta.get_compositor_private()?.show();
 
-        ext.auto_tiler?.tile(ext, a_fork, a_fork.area);
-        ext.auto_tiler?.tile(ext, b_fork, b_fork.area);
+        log.debug(`swapped: ${this.forest.fmt(ext)}`);
+
+        this.tile(ext, a_fork, a_fork.area);
+        this.tile(ext, b_fork, b_fork.area);
     }
 
     update_toplevel(ext: Ext, fork: Fork, monitor: number, smart_gaps: boolean) {
