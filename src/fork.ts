@@ -277,12 +277,14 @@ export class Fork {
     }
 
     rebalance_orientation() {
-        let new_orientation = this.area.height > this.area.width
+        this.set_orientation(this.area.height > this.area.width
             ? Lib.Orientation.VERTICAL
-            : Lib.Orientation.HORIZONTAL;
+            : Lib.Orientation.HORIZONTAL)
+    }
 
-        if (new_orientation !== this.orientation) {
-            this.orientation = new_orientation;
+    set_orientation(o: Lib.Orientation) {
+        if (o !== this.orientation) {
+            this.orientation = o;
             this.orientation_changed = true;
         }
     }

@@ -194,59 +194,61 @@ export class Tiler {
                             return;
                         }
 
+                        const detach = (orientation: Lib.Orientation, reverse: boolean) => {
+                            if (!ext.auto_tiler) return;
+                            focused.stack = null;
+
+                            if (fork.right) {
+                                let left, right;
+                                if (reverse) {
+                                    left = branch;
+                                    right = Node.Node.window(focused.entity);
+                                } else {
+                                    left = Node.Node.window(focused.entity);
+                                    right = branch;
+                                }
+
+                                this.unstack_from_fork(ext, stack, focused, fork, left, right, is_left);
+                            } else if (reverse) {
+                                fork.right = Node.Node.window(focused.entity);
+                            } else {
+                                fork.right = fork.left;
+                                fork.left = Node.Node.window(focused.entity);
+                            }
+
+                            fork.set_orientation(orientation);
+
+                            ext.auto_tiler.tile(ext, fork, fork.area);
+                            this.overlay_watch(ext, focused);
+                        }
+
                         switch (direction) {
-                            // Move focused window in stack to the left
                             case Direction.Left:
                                 if (!Node.stack_move_left(ext, ext.auto_tiler.forest, stack, focused.entity)) {
-                                    focused.stack = null;
-
-                                    // No window existed to the left of the stack. Detach and modify the tree.
-                                    if (fork.right === null) {
-                                        fork.right = fork.left;
-                                        fork.left = Node.Node.window(focused.entity);
-                                    } else {
-                                        this.unstack_from_fork(
-                                            ext,
-                                            stack,
-                                            focused,
-                                            fork,
-                                            Node.Node.window(focused.entity),
-                                            branch,
-                                            is_left
-                                        );
-                                    }
-
-                                    ext.auto_tiler.tile(ext, fork, fork.area);
-                                    this.overlay_watch(ext, focused);
+                                    detach(Lib.Orientation.HORIZONTAL, false);
                                 }
 
                                 ext.auto_tiler.update_stack(ext, stack);
 
                                 return;
-                            // Move focused window in stack to the right
+
                             case Direction.Right:
                                 if (!Node.stack_move_right(ext, ext.auto_tiler.forest, stack, focused.entity)) {
-                                    focused.stack = null;
-                                    if (fork.right) {
-                                        this.unstack_from_fork(
-                                            ext,
-                                            stack,
-                                            focused,
-                                            fork,
-                                            branch,
-                                            Node.Node.window(focused.entity),
-                                            is_left
-                                        );
-                                    } else {
-                                        fork.right = Node.Node.window(focused.entity);
-                                    }
-
-                                    ext.auto_tiler.tile(ext, fork, fork.area);
-                                    this.overlay_watch(ext, focused);
+                                    detach(Lib.Orientation.HORIZONTAL, true);
                                 }
 
                                 ext.auto_tiler.update_stack(ext, stack);
 
+                                return;
+
+                            case Direction.Up:
+                                Node.stack_remove(ext.auto_tiler.forest, stack, focused.entity);
+                                detach(Lib.Orientation.VERTICAL, false);
+                                return;
+
+                            case Direction.Down:
+                                Node.stack_remove(ext.auto_tiler.forest, stack, focused.entity);
+                                detach(Lib.Orientation.VERTICAL, true);
                                 return;
                         }
                     }
